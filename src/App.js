@@ -1,11 +1,16 @@
 import React, { useState, Fragment } from "react";
-import { nanoid } from "nanoid";
 import "./App.css";
 import ReadOnlyRow from "./components/ReadOnlyRow";
 import EditableRow from "./components/EditableRow";
 
 import upload from './upload.png';
 import download from './download.png';
+
+
+const dataInit = [
+  {
+
+  }]
 
 const App = () => {
 
@@ -18,7 +23,7 @@ const App = () => {
   // file upload related
   const [uploadFile, setUploadFile] = React.useState();
 
-  const [contacts, setRecords] = useState(dataInit);
+  const [records, setRecords] = useState(dataInit);
 
   const [addFormData, setAddFormData] = useState({
     date: "",
@@ -33,10 +38,10 @@ const App = () => {
   });
 
 
-  function getAvg(contacts) {
-    let len = contacts.length;
+  function getAvg(records) {
+    let len = records.length;
     let counter = 0;
-    contacts.forEach(function(el) {
+    records.forEach(function(el) {
       let min = el.minTemp;
       let max = el.maxTemp;
       let avg = (parseInt(min)+parseInt(max))/2;
@@ -45,7 +50,6 @@ const App = () => {
     return (counter/len).toFixed(1);
   }
 
-  // updateObj(contacts);
 
   const [editContactId, setEditContactId] = useState(null);
 
@@ -76,13 +80,13 @@ const App = () => {
     event.preventDefault();
 
     const newContact = {
-      id: contacts.length+1,
+      id: records.length+1,
       date: addFormData.date,
       minTemp: addFormData.minTemp,
       maxTemp: addFormData.maxTemp,
     };
 
-    const newRecords = [...contacts, newContact];
+    const newRecords = [...records, newContact];
     setRecords(newRecords);
   };
 
@@ -96,9 +100,9 @@ const App = () => {
       maxTemp: editFormData.maxTemp,
     };
 
-    const newRecords = [...contacts];
+    const newRecords = [...records];
 
-    const index = contacts.findIndex((contact) => contact.id === editContactId);
+    const index = records.findIndex((record) => record.id === editContactId);
 
     newRecords[index] = editedContact;
 
@@ -106,14 +110,14 @@ const App = () => {
     setEditContactId(null);
   };
 
-  const handleEditClick = (event, contact) => {
+  const handleEditClick = (event, record) => {
     event.preventDefault();
-    setEditContactId(contact.id);
+    setEditContactId(record.id);
 
     const formValues = {
-      date: contact.date,
-      minTemp: contact.minTemp,
-      maxTemp: contact.maxTemp,
+      date: record.date,
+      minTemp: record.minTemp,
+      maxTemp: record.maxTemp,
     };
 
     setEditFormData(formValues);
@@ -124,17 +128,43 @@ const App = () => {
   };
 
   const handleDeleteClick = (contactId) => {
-    const newRecords = [...contacts];
+    const newRecords = [...records];
 
-    const index = contacts.findIndex((contact) => contact.id === contactId);
+    const index = records.findIndex((record) => record.id === contactId);
 
     newRecords.splice(index, 1);
 
     setRecords(newRecords);
   };
 
+  const handleFileChange = e => {
+
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.readAsText(file);
+
+    reader.onload = () => {
+      const fileName = file.name;
+      const fileContent = reader.result;
+    }
+
+  };
 
 
+  const downloadFile = () => {
+    const element = document.createElement("a");
+    // console.log(records);
+    // console.log(typeof records);
+
+    const fileName = name[0].toString();
+    const fileData = JSON.stringify(records);
+
+    const file = new Blob([fileData], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${fileName}.json`;
+    document.body.appendChild(element); // Required for this to work in FireFox
+    element.click();
+  }
 
 
 
@@ -174,19 +204,17 @@ const App = () => {
             </label>
           </div>
 
-          <div>
-            <h3>Average Temperature:</h3>
-            <p>{getAvg(contacts)}°</p>
-          </div>
-          {/*<p>Content is {typeof content}</p>*/}
-          {/*  <p>Contacts is {typeof contacts}</p>*/}
-          {/*<FileInput />*/}
+
 
           <div>
-            <button>
-              <img src={download} alt="download project" onClick={downloadFile} style={{width: '40px', height: 'auto'}}/>
-            </button>
+            <h3>Average Temperature:</h3>
+            <p>{getAvg(records)}°</p>
           </div>
+          {/*<p>Content is {typeof content}</p>*/}
+          {/*  <p>records is {typeof records}</p>*/}
+          {/*<FileInput />*/}
+
+
 
 
 
@@ -233,9 +261,9 @@ const App = () => {
               </thead>
               <tbody>
               {/*content if exists*/}
-              {contacts.map((contact) => (
+              {records.map((record) => (
                   <Fragment>
-                    {editContactId === contact.id ? (
+                    {editContactId === record.id ? (
                         <EditableRow
                             editFormData={editFormData}
                             handleEditFormChange={handleEditFormChange}
@@ -243,7 +271,7 @@ const App = () => {
                         />
                     ) : (
                         <ReadOnlyRow
-                            contact={contact}
+                            record={record}
                             handleEditClick={handleEditClick}
                             handleDeleteClick={handleDeleteClick}
                         />
@@ -254,7 +282,12 @@ const App = () => {
             </table>
           </form>
 
+        </div>
 
+        <div style={{margin: '7px auto', textAlign: 'center'}}>
+          <button style={{background: 'transparent', border: 0}}>
+            <img src={download} alt="download project" onClick={downloadFile} style={{width: '60px', height: 'auto'}}/>
+          </button>
         </div>
       </>
   );
