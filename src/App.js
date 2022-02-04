@@ -286,7 +286,8 @@ const App = () => {
 
         <div style={{margin: '7px auto', textAlign: 'center'}}>
           <button style={{background: 'transparent', border: 0}}>
-            <img src={download} alt="download project" onClick={downloadFile} style={{width: '60px', height: 'auto'}}/>
+            <img src={download} alt="download project" onClick={downloadFile} style={{width: '60px', height: 'auto',
+              cursor: 'pointer'}}/>
           </button>
         </div>
       </>
