@@ -1,25 +1,263 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, Fragment } from "react";
+import { nanoid } from "nanoid";
+import "./App.css";
+import ReadOnlyRow from "./components/ReadOnlyRow";
+import EditableRow from "./components/EditableRow";
 
-function App() {
+import upload from './upload.png';
+import download from './download.png';
+
+const App = () => {
+
+  let fileName = React.createRef();
+  let fileContent = React.createRef();
+  const [name, setName] = useState();
+
+  const [content, setContent] = useState();
+
+  // file upload related
+  const [uploadFile, setUploadFile] = React.useState();
+
+  const [contacts, setRecords] = useState(dataInit);
+
+  const [addFormData, setAddFormData] = useState({
+    date: "",
+    minTemp: "",
+    maxTemp: "",
+  });
+
+  const [editFormData, setEditFormData] = useState({
+    date: "",
+    minTemp: "",
+    maxTemp: "",
+  });
+
+
+  function getAvg(contacts) {
+    let len = contacts.length;
+    let counter = 0;
+    contacts.forEach(function(el) {
+      let min = el.minTemp;
+      let max = el.maxTemp;
+      let avg = (parseInt(min)+parseInt(max))/2;
+      counter = counter +avg;
+    });
+    return (counter/len).toFixed(1);
+  }
+
+  // updateObj(contacts);
+
+  const [editContactId, setEditContactId] = useState(null);
+
+  const handleAddFormChange = (event) => {
+    event.preventDefault();
+
+    const fieldName = event.target.getAttribute("name");
+    const fieldValue = event.target.value;
+
+    const newFormData = { ...addFormData };
+    newFormData[fieldName] = fieldValue;
+    setAddFormData(newFormData);
+  };
+
+  const handleEditFormChange = (event) => {
+    event.preventDefault();
+
+    const fieldName = event.target.getAttribute("name");
+    const fieldValue = event.target.value;
+
+    const newFormData = { ...editFormData };
+    newFormData[fieldName] = fieldValue;
+
+    setEditFormData(newFormData);
+  };
+
+  const handleAddFormSubmit = (event) => {
+    event.preventDefault();
+
+    const newContact = {
+      id: contacts.length+1,
+      date: addFormData.date,
+      minTemp: addFormData.minTemp,
+      maxTemp: addFormData.maxTemp,
+    };
+
+    const newRecords = [...contacts, newContact];
+    setRecords(newRecords);
+  };
+
+  const handleEditFormSubmit = (event) => {
+    event.preventDefault();
+
+    const editedContact = {
+      id: editContactId,
+      date: editFormData.date,
+      minTemp: editFormData.minTemp,
+      maxTemp: editFormData.maxTemp,
+    };
+
+    const newRecords = [...contacts];
+
+    const index = contacts.findIndex((contact) => contact.id === editContactId);
+
+    newRecords[index] = editedContact;
+
+    setRecords(newRecords);
+    setEditContactId(null);
+  };
+
+  const handleEditClick = (event, contact) => {
+    event.preventDefault();
+    setEditContactId(contact.id);
+
+    const formValues = {
+      date: contact.date,
+      minTemp: contact.minTemp,
+      maxTemp: contact.maxTemp,
+    };
+
+    setEditFormData(formValues);
+  };
+
+  const handleCancelClick = () => {
+    setEditContactId(null);
+  };
+
+  const handleDeleteClick = (contactId) => {
+    const newRecords = [...contacts];
+
+    const index = contacts.findIndex((contact) => contact.id === contactId);
+
+    newRecords.splice(index, 1);
+
+    setRecords(newRecords);
+  };
+
+
+
+
+
+
+
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <>
+        <h1 style={{fontFamily: 'SuisseIntlMono-Regular', fonWeight: 'black', textAlign: 'left', margin: '20px 20px'
+        }}>Weather App</h1>
+
+        <div className="app-container">
+
+          <h2>{name}</h2>
+          {/*file upload*/}
+
+          <div>
+            <input
+                type="file"
+                accept=".json"
+                id="inputFile"
+                ref={fileName}
+                placeholder="Upload your file"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  const reader = new FileReader();
+                  reader.readAsText(file);
+                  reader.onload = () => {
+                    setName(file.name.toString().split(".json"));
+                    setContent(JSON.parse(reader.result)); // separate hook for the content
+                    setRecords(JSON.parse(reader.result));
+                  }
+                }}
+            />
+
+            <label for="inputFile" id="labelFile">
+              <img src={upload} alt="upload project" style={{width: '40px', height: 'auto'}}/>
+            </label>
+          </div>
+
+          <div>
+            <h3>Average Temperature:</h3>
+            <p>{getAvg(contacts)}°</p>
+          </div>
+          {/*<p>Content is {typeof content}</p>*/}
+          {/*  <p>Contacts is {typeof contacts}</p>*/}
+          {/*<FileInput />*/}
+
+          <div>
+            <button>
+              <img src={download} alt="download project" onClick={downloadFile} style={{width: '40px', height: 'auto'}}/>
+            </button>
+          </div>
+
+
+
+
+          <h2>Add Record</h2>
+          <form onSubmit={handleAddFormSubmit}>
+            <input
+                type="date" // ???
+                name="date"
+                required="required"
+                placeholder="Enter Date..."
+                onChange={handleAddFormChange}
+            />
+            <input
+                type="number"
+                name="minTemp"
+                required="required"
+                placeholder="Enter MinTemp..."
+                onChange={handleAddFormChange}
+            />
+            <input
+                type="number"
+                name="maxTemp"
+                required="required"
+                placeholder="Enter MaxTemp..."
+                onChange={handleAddFormChange}
+            />
+            <button type="submit">Add</button>
+          </form>
+
+          <div style={{margin: '2vh auto'}}>
+          </div>
+
+          <form onSubmit={handleEditFormSubmit}>
+            <table>
+              <thead>
+              <tr>
+                <th>Date</th>
+                <th>Min Temp</th>
+                <th>Max Temp</th>
+                <th>Average</th>
+                <th>🖊️🗑️</th>
+              </tr>
+              </thead>
+              <tbody>
+              {/*content if exists*/}
+              {contacts.map((contact) => (
+                  <Fragment>
+                    {editContactId === contact.id ? (
+                        <EditableRow
+                            editFormData={editFormData}
+                            handleEditFormChange={handleEditFormChange}
+                            handleCancelClick={handleCancelClick}
+                        />
+                    ) : (
+                        <ReadOnlyRow
+                            contact={contact}
+                            handleEditClick={handleEditClick}
+                            handleDeleteClick={handleDeleteClick}
+                        />
+                    )}
+                  </Fragment>
+              ))}
+              </tbody>
+            </table>
+          </form>
+
+
+        </div>
+      </>
   );
-}
+};
 
 export default App;
